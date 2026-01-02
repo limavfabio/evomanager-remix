@@ -1,4 +1,4 @@
-import { type ClientLoaderFunctionArgs, type ClientActionFunctionArgs, redirect, useLoaderData, Form, useSubmit, Link } from "react-router";
+import { type ClientLoaderFunctionArgs, type ClientActionFunctionArgs, redirect, useLoaderData, Form, useSubmit, Link, useNavigation, useActionData } from "react-router";
 import { getClientSession, clearClientSession } from "~/sessions";
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
@@ -106,7 +106,7 @@ export async function clientAction({ request }: ClientActionFunctionArgs) {
         throw new Error(err.message || "Failed to create instance");
       }
 
-      return { success: true };
+      return redirect(`/instances/${instanceName}?new=true`);
     } catch (e: any) {
       console.error("CREATE ERROR:", e);
       return { error: e.message };
@@ -142,9 +142,14 @@ export async function clientAction({ request }: ClientActionFunctionArgs) {
 
 export default function Dashboard() {
   const { instances, error, apiUrl } = useLoaderData<typeof clientLoader>();
+  const actionData = useActionData<{ error?: string }>();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; name: string }>({ open: false, name: "" });
   const submit = useSubmit();
+  const navigation = useNavigation();
+
+  const isCreating = navigation.state === "submitting" && navigation.formData?.get("intent") === "create-instance";
+
 
   const performDelete = (instanceName: string) => {
     const formData = new FormData();
@@ -210,17 +215,27 @@ export default function Dashboard() {
                 Provide a unique name for your new WhatsApp instance.
               </DialogDescription>
 
-              <Form method="post" onSubmit={() => setIsModalOpen(false)} className="space-y-4">
+              <Form method="post" className="space-y-4">
                 <input type="hidden" name="intent" value="create-instance" />
+
+                {actionData?.error && (
+                  <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-3 rounded-lg text-xs text-red-600 dark:text-red-400">
+                    {actionData.error}
+                  </div>
+                )}
+
                 <Input
                   label="Instance Name"
                   name="instanceName"
                   required
                   placeholder="My_Business_WA"
+                  disabled={isCreating}
                 />
                 <div className="flex justify-end space-x-3 mt-6">
-                  <DialogClose render={<Button variant="secondary">Cancel</Button>} />
-                  <Button type="submit">Create</Button>
+                  <DialogClose render={<Button variant="secondary" disabled={isCreating}>Cancel</Button>} />
+                  <Button type="submit" isLoading={isCreating}>
+                    {isCreating ? "Creating..." : "Create"}
+                  </Button>
                 </div>
               </Form>
             </DialogContent>

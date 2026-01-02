@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "~/components/ui/input";
 import {
   Dialog,
@@ -9,7 +9,7 @@ import {
   DialogClose,
 } from "~/components/ui/dialog";
 
-import { type ClientLoaderFunctionArgs, type ClientActionFunctionArgs, useLoaderData, Form, Link, useActionData, useNavigation } from "react-router";
+import { type ClientLoaderFunctionArgs, type ClientActionFunctionArgs, useLoaderData, Form, Link, useActionData, useNavigation, useSearchParams } from "react-router";
 import { getClientSession } from "~/sessions";
 import { Button } from "~/components/ui/button";
 
@@ -87,6 +87,7 @@ export default function InstanceShow() {
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [isChatwootModalOpen, setIsChatwootModalOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const isSubmitting = navigation.state === "submitting";
   const name = instance.name || instance.instanceName;
@@ -148,6 +149,21 @@ export default function InstanceShow() {
     }
   };
 
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    const isNew = searchParams.get("new") === "true";
+    const isDisconnected = status !== "open" && status !== "CONNECTED";
+
+    if (isNew && isDisconnected && !qrCode && !loading) {
+      fetchQr();
+      // Remove the query param so it doesn't refetch on manual reload
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("new");
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [searchParams, status, qrCode, loading]);
+
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 font-sans">
       <header className="sticky top-0 z-10 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800">
@@ -189,19 +205,9 @@ export default function InstanceShow() {
                 <p className="text-sm text-zinc-500">{instance.profileName || "WhatsApp Instance"}</p>
               </div>
             </div>
-            <div className="text-right flex flex-col items-end space-y-2">
-              <div className="hidden sm:block">
-                <p className="text-xs text-zinc-400 uppercase font-bold tracking-widest mb-1">Integration</p>
-                <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">{instance.integration || "Baileys"}</p>
-              </div>
-              <Button
-                variant="secondary"
-                size="sm"
-                className="h-8 text-[11px] font-bold uppercase tracking-wider"
-                onClick={() => setIsChatwootModalOpen(true)}
-              >
-                {instance.Chatwoot?.enabled ? '✓ Chatwoot' : 'Connect Chatwoot'}
-              </Button>
+            <div className="text-right hidden sm:block">
+              <p className="text-xs text-zinc-400 uppercase font-bold tracking-widest mb-1">Integration</p>
+              <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">{instance.integration || "Baileys"}</p>
             </div>
           </div>
 
@@ -271,13 +277,17 @@ export default function InstanceShow() {
                             <Button
                               variant="secondary"
                               size="sm"
-                              className="h-7 px-2 text-[10px]"
+                              className="h-7 px-3 text-[10px] relative overflow-hidden"
                               onClick={() => {
                                 navigator.clipboard.writeText(`${apiUrl!.replace(/\/$/, '')}/chatwoot/webhook/${name}`);
-                                alert("Webhook URL copied!");
+                                setCopied(true);
+                                setTimeout(() => setCopied(false), 2000);
                               }}
                             >
-                              Copy
+                              <span className={`transition-transform duration-300 ${copied ? '-translate-y-8' : 'translate-y-0'}`}>Copy</span>
+                              <span className={`absolute inset-0 flex items-center justify-center bg-zinc-900 text-white transition-transform duration-300 ${copied ? 'translate-y-0' : 'translate-y-8'}`}>
+                                Copied!
+                              </span>
                             </Button>
                           </div>
                         </div>
