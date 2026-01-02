@@ -48,7 +48,7 @@ export async function clientAction({ params, request }: ClientActionFunctionArgs
   if (intent === "chatwoot-set") {
     try {
       const payload = {
-        enabled: true,
+        enabled: formData.get("enabled") === "true",
         accountId: String(formData.get("accountId")),
         inboxId: String(formData.get("inboxId")),
         token: formData.get("token") as string,
@@ -353,8 +353,9 @@ export default function InstanceShow() {
             Bind this WhatsApp instance to your Chatwoot API inbox.
           </DialogDescription>
 
-          <Form method="post" className="space-y-4">
+          <Form method="post" className="space-y-4" id="chatwoot-form">
             <input type="hidden" name="intent" value="chatwoot-set" />
+            <input type="hidden" name="enabled" value="true" id="chatwoot-enabled" />
 
             {actionData?.error && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-3 rounded-lg text-xs text-red-600 dark:text-red-400">
@@ -364,7 +365,7 @@ export default function InstanceShow() {
 
             <div className="grid grid-cols-2 gap-4">
               <Input label="Account ID" name="accountId" type="number" required defaultValue={chatwoot.accountId} />
-              <Input label="Inbox ID" name="inboxId" type="number" required defaultValue={chatwoot.inboxId} />
+              <Input label="Inbox ID / Name" name="inboxId" required defaultValue={chatwoot.inboxId || chatwoot.nameInbox} />
             </div>
             <Input label="Access Token" name="token" type="password" required defaultValue={chatwoot.token} />
             <Input label="Chatwoot URL" name="url" type="url" required defaultValue={chatwoot.url} placeholder="https://chatwoot.example.com" />
@@ -384,11 +385,28 @@ export default function InstanceShow() {
               </div>
             </div>
 
-            <div className="flex justify-end space-x-3 mt-6">
-              <DialogClose render={<Button variant="secondary">Cancel</Button>} />
-              <Button type="submit" isLoading={isSubmitting}>
-                Save Configuration
-              </Button>
+            <div className="flex items-center justify-between mt-6">
+              <div>
+                {chatwoot.enabled && (
+                  <Button
+                    type="submit"
+                    variant="ghost"
+                    className="text-red-600 hover:text-red-700 dark:text-red-500 dark:hover:text-red-400 text-xs font-bold"
+                    onClick={(e) => {
+                      const input = document.getElementById("chatwoot-enabled") as HTMLInputElement;
+                      if (input) input.value = "false";
+                    }}
+                  >
+                    Disconnect Integration
+                  </Button>
+                )}
+              </div>
+              <div className="flex space-x-3">
+                <DialogClose render={<Button variant="secondary">Cancel</Button>} />
+                <Button type="submit" isLoading={isSubmitting}>
+                  Save Configuration
+                </Button>
+              </div>
             </div>
           </Form>
         </DialogContent>
