@@ -3,6 +3,7 @@ import { getClientSession, clearClientSession } from "~/sessions";
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
+import { Textarea } from "~/components/ui/textarea";
 import {
   Dialog,
   DialogTrigger,
@@ -104,6 +105,10 @@ export async function clientAction({ request }: ClientActionFunctionArgs) {
           alwaysOnline: formData.get("alwaysOnline") === "on",
           readMessages: formData.get("readMessages") === "on",
           readStatus: formData.get("readStatus") === "on",
+          ignoreJids: (formData.get("ignoreJids") as string || "")
+            .split(",")
+            .map((jid) => jid.trim())
+            .filter(Boolean),
         }),
       });
 
@@ -271,6 +276,14 @@ export default function Dashboard() {
                       description="View status updates"
                     />
                   </div>
+                  <Textarea
+                    label="Ignore JIDs"
+                    name="ignoreJids"
+                    placeholder="123456789@s.whatsapp.net, 987654321@g.us"
+                  />
+                  <p className="text-[10px] text-zinc-500 -mt-2">
+                    Separate JIDs with commas.
+                  </p>
                 </div>
                 <div className="flex justify-end space-x-3 mt-6">
                   <DialogClose render={<Button variant="secondary" disabled={isCreating}>Cancel</Button>} />

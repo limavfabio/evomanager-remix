@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Input } from "~/components/ui/input";
+import { Textarea } from "~/components/ui/textarea";
 import {
   Dialog,
   DialogTrigger,
@@ -87,6 +88,10 @@ export async function clientAction({ params, request }: ClientActionFunctionArgs
         alwaysOnline: formData.get("alwaysOnline") === "on",
         readMessages: formData.get("readMessages") === "on",
         readStatus: formData.get("readStatus") === "on",
+        ignoreJids: (formData.get("ignoreJids") as string || "")
+          .split(",")
+          .map((jid) => jid.trim())
+          .filter(Boolean),
         syncFullHistory: false
       };
 
@@ -510,6 +515,16 @@ export default function InstanceShow() {
                   description="Mark status as viewed"
                 />
               </div>
+
+              <Textarea
+                label="Ignore JIDs"
+                name="ignoreJids"
+                placeholder="123456789@s.whatsapp.net, 987654321@g.us"
+                defaultValue={Array.isArray(instance.Setting?.ignoreJids) ? instance.Setting.ignoreJids.join(", ") : ""}
+              />
+              <p className="text-[10px] text-zinc-500 -mt-2">
+                Separate JIDs with commas. These contacts/groups will be ignored by the API.
+              </p>
             </div>
 
             <div className="flex justify-end space-x-3">
