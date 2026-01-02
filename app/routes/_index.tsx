@@ -1,4 +1,4 @@
-import { type ClientLoaderFunctionArgs, type ClientActionFunctionArgs, redirect, useLoaderData, Form, useSubmit } from "react-router";
+import { type ClientLoaderFunctionArgs, type ClientActionFunctionArgs, redirect, useLoaderData, Form, useSubmit, Link } from "react-router";
 import { getClientSession, clearClientSession } from "~/sessions";
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
@@ -284,14 +284,19 @@ export default function Dashboard() {
                         <div className="text-[10px] text-zinc-400 font-medium">
                           {item.integration || "WHATSAPP"}
                         </div>
-                        <Button variant="link" size="sm" className="group-hover:translate-x-1 transition-transform p-0 h-auto font-semibold">
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="group-hover:translate-x-1 transition-transform p-0 h-auto font-semibold"
+                          render={<Link to={`/instances/${name}`} />}
+                        >
                           Manage <span className="ml-1">→</span>
                         </Button>
                       </div>
                     </div>
                   </ContextMenuTrigger>
                   <ContextMenuContent>
-                    <ContextMenuItem>View Details</ContextMenuItem>
+                    <ContextMenuItem render={<Link to={`/instances/${name}`} />}>View Details</ContextMenuItem>
                     <ContextMenuItem>Restart Instance</ContextMenuItem>
                     <div className="my-1 h-px bg-zinc-100 dark:bg-zinc-800" />
                     <ContextMenuItem destructive onClick={() => handleDeleteRequest(name, status)}>
