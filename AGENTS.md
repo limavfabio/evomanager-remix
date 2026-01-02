@@ -4,6 +4,7 @@
 - **Anti-Defensive**: Abhor defensive code. No safe navigation or null checks to hide upstream issues. Errors should surface early; null/undefined handling belongs strictly to business logic.
 - **Simplicity First**: Rely on framework/library defaults. Do not stray from standard patterns unless explicitly requested.
 - **SPA Architecture**: Pure SPA with `ssr: false`. Use `clientLoader` and `clientAction`.
+- **No Assumptions**: Do not assume documentation. Always search for it using `context7` before implementing or modifying library integrations.
 
 ## 🎨 UI Guidelines
 - **Location**: All building blocks in `app/components/ui/`.

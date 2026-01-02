@@ -1,4 +1,4 @@
-import { type ClientLoaderFunctionArgs, type ClientActionFunctionArgs, redirect, useLoaderData, Form } from "react-router";
+import { type ClientLoaderFunctionArgs, type ClientActionFunctionArgs, redirect, useLoaderData, Form, useSubmit } from "react-router";
 import { getClientSession, clearClientSession } from "~/sessions";
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
@@ -11,6 +11,20 @@ import {
   DialogDescription,
   DialogClose,
 } from "~/components/ui/dialog";
+import {
+  ContextMenu,
+  ContextMenuTrigger,
+  ContextMenuContent,
+  ContextMenuItem,
+} from "~/components/ui/context-menu";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "~/components/ui/alert-dialog";
 
 export function meta() {
   return [
@@ -49,9 +63,6 @@ export async function clientLoader() {
     return { instances, apiUrl, apiKey };
   } catch (error: any) {
     console.error("FULL ERROR:", error);
-    if (typeof window !== "undefined") {
-      alert("Error fetching instances: " + error.message);
-    }
     return {
       instances: [],
       error: error?.message || "Failed to connect to Evolution API",
@@ -64,6 +75,7 @@ export async function clientLoader() {
 export async function clientAction({ request }: ClientActionFunctionArgs) {
   const formData = await request.formData();
   const intent = formData.get("intent");
+  const { apiUrl, apiKey } = getClientSession();
 
   if (intent === "logout") {
     clearClientSession();
@@ -71,9 +83,7 @@ export async function clientAction({ request }: ClientActionFunctionArgs) {
   }
 
   if (intent === "create-instance") {
-    const { apiUrl, apiKey } = getClientSession();
     const instanceName = formData.get("instanceName") as string;
-
     if (!instanceName) return { error: "Instance name is required" };
 
     try {
@@ -87,6 +97,7 @@ export async function clientAction({ request }: ClientActionFunctionArgs) {
           instanceName,
           token: "",
           qrcode: true,
+          integration: "WHATSAPP-BAILEYS",
         }),
       });
 
@@ -98,7 +109,30 @@ export async function clientAction({ request }: ClientActionFunctionArgs) {
       return { success: true };
     } catch (e: any) {
       console.error("CREATE ERROR:", e);
-      alert("Error creating instance: " + e.message);
+      return { error: e.message };
+    }
+  }
+
+  if (intent === "delete-instance") {
+    const instanceName = formData.get("instanceName") as string;
+    if (!instanceName) return { error: "Instance name is required" };
+
+    try {
+      const response = await fetch(`${apiUrl}/instance/delete/${instanceName}`, {
+        method: "DELETE",
+        headers: {
+          apikey: apiKey!,
+        },
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.message || "Failed to delete instance");
+      }
+
+      return { success: true };
+    } catch (e: any) {
+      console.error("DELETE ERROR:", e);
       return { error: e.message };
     }
   }
@@ -109,6 +143,27 @@ export async function clientAction({ request }: ClientActionFunctionArgs) {
 export default function Dashboard() {
   const { instances, error, apiUrl } = useLoaderData<typeof clientLoader>();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; name: string }>({ open: false, name: "" });
+  const submit = useSubmit();
+
+  const performDelete = (instanceName: string) => {
+    const formData = new FormData();
+    formData.append("intent", "delete-instance");
+    formData.append("instanceName", instanceName);
+    submit(formData, { method: "post" });
+    setDeleteConfirm({ open: false, name: "" });
+  };
+
+  const handleDeleteRequest = (instanceName: string, status: string) => {
+    const s = status.toLowerCase();
+    const needsConfirmation = ["open", "connected", "disconnected"].includes(s);
+
+    if (needsConfirmation) {
+      setDeleteConfirm({ open: true, name: instanceName });
+    } else {
+      performDelete(instanceName);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 font-sans">
@@ -193,53 +248,78 @@ export default function Dashboard() {
               const pic = item?.profilePicUrl;
 
               return (
-                <div
-                  key={name}
-                  className="group relative bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 hover:shadow-lg hover:border-zinc-300 dark:hover:border-zinc-700 transition-all"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                      {pic ? (
-                        <img src={pic} alt={name} className="w-10 h-10 rounded-full object-cover border border-zinc-200 dark:border-zinc-700" />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center font-bold text-zinc-400">
-                          {name[0]}
+                <ContextMenu key={name}>
+                  <ContextMenuTrigger>
+                    <div className="group relative bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 hover:shadow-lg hover:border-zinc-300 dark:hover:border-zinc-700 transition-all cursor-default">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center space-x-3">
+                          {pic ? (
+                            <img src={pic} alt={name} className="w-10 h-10 rounded-full object-cover border border-zinc-200 dark:border-zinc-700" />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center font-bold text-zinc-400">
+                              {name[0]}
+                            </div>
+                          )}
+                          <div className="space-y-0.5">
+                            <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-100">
+                              {name}
+                            </h3>
+                            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                              {profile}
+                            </p>
+                          </div>
                         </div>
-                      )}
-                      <div className="space-y-0.5">
-                        <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-100">
-                          {name}
-                        </h3>
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                          {profile}
-                        </p>
+                        <div
+                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider
+                          ${status === "open" || status === "CONNECTED"
+                              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"
+                              : "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700"
+                            }`}
+                        >
+                          {status.toUpperCase()}
+                        </div>
+                      </div>
+
+                      <div className="mt-6 flex items-center justify-between">
+                        <div className="text-[10px] text-zinc-400 font-medium">
+                          {item.integration || "WHATSAPP"}
+                        </div>
+                        <Button variant="link" size="sm" className="group-hover:translate-x-1 transition-transform p-0 h-auto font-semibold">
+                          Manage <span className="ml-1">→</span>
+                        </Button>
                       </div>
                     </div>
-                    <div
-                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider
-                      ${status === "open" || status === "CONNECTED"
-                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"
-                          : "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700"
-                        }`}
-                    >
-                      {status.toUpperCase()}
-                    </div>
-                  </div>
-
-                  <div className="mt-6 flex items-center justify-between">
-                    <div className="text-[10px] text-zinc-400 font-medium">
-                      {item.integration || "WHATSAPP"}
-                    </div>
-                    <Button variant="link" size="sm" className="group-hover:translate-x-1 transition-transform">
-                      Manage <span className="ml-1">→</span>
-                    </Button>
-                  </div>
-                </div>
+                  </ContextMenuTrigger>
+                  <ContextMenuContent>
+                    <ContextMenuItem>View Details</ContextMenuItem>
+                    <ContextMenuItem>Restart Instance</ContextMenuItem>
+                    <div className="my-1 h-px bg-zinc-100 dark:bg-zinc-800" />
+                    <ContextMenuItem destructive onClick={() => handleDeleteRequest(name, status)}>
+                      Delete Instance
+                    </ContextMenuItem>
+                  </ContextMenuContent>
+                </ContextMenu>
               );
             })}
           </div>
         )}
       </main>
+
+      {/* Custom Delete Confirmation Dialog */}
+      <AlertDialog open={deleteConfirm.open} onOpenChange={(open) => !open && setDeleteConfirm({ open: false, name: "" })}>
+        <AlertDialogContent>
+          <AlertDialogTitle>Delete Instance</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to delete the instance <span className="font-bold text-zinc-900 dark:text-zinc-100">"{deleteConfirm.name}"</span>? This action cannot be undone.
+          </AlertDialogDescription>
+          <div className="flex justify-end space-x-3">
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={() => performDelete(deleteConfirm.name)}>
+              Delete
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
