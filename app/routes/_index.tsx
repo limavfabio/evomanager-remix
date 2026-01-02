@@ -11,6 +11,7 @@ import {
   DialogDescription,
   DialogClose,
 } from "~/components/ui/dialog";
+import { Checkbox } from "~/components/ui/checkbox";
 import {
   ContextMenu,
   ContextMenuTrigger,
@@ -98,6 +99,11 @@ export async function clientAction({ request }: ClientActionFunctionArgs) {
           token: "",
           qrcode: true,
           integration: "WHATSAPP-BAILEYS",
+          rejectCall: formData.get("rejectCall") === "on",
+          groupsIgnore: formData.get("groupsIgnore") === "on",
+          alwaysOnline: formData.get("alwaysOnline") === "on",
+          readMessages: formData.get("readMessages") === "on",
+          readStatus: formData.get("readStatus") === "on",
         }),
       });
 
@@ -231,6 +237,41 @@ export default function Dashboard() {
                   placeholder="My_Business_WA"
                   disabled={isCreating}
                 />
+
+                <div className="space-y-4">
+                  <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Instance Settings</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 bg-zinc-50 dark:bg-zinc-950/50 p-5 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                    <Checkbox
+                      label="Ignore Groups"
+                      name="groupsIgnore"
+                      defaultChecked
+                      description="No API events for groups"
+                    />
+                    <Checkbox
+                      label="Reject Calls"
+                      name="rejectCall"
+                      description="Auto-decline incoming calls"
+                    />
+                    <Checkbox
+                      label="Always Online"
+                      name="alwaysOnline"
+                      defaultChecked
+                      description="Keep status active"
+                    />
+                    <Checkbox
+                      label="Read Messages"
+                      name="readMessages"
+                      defaultChecked
+                      description="Send blue ticks"
+                    />
+                    <Checkbox
+                      label="Read Status"
+                      name="readStatus"
+                      defaultChecked
+                      description="View status updates"
+                    />
+                  </div>
+                </div>
                 <div className="flex justify-end space-x-3 mt-6">
                   <DialogClose render={<Button variant="secondary" disabled={isCreating}>Cancel</Button>} />
                   <Button type="submit" isLoading={isCreating}>

@@ -12,6 +12,7 @@ import {
 import { type ClientLoaderFunctionArgs, type ClientActionFunctionArgs, useLoaderData, Form, Link, useActionData, useNavigation, useSearchParams } from "react-router";
 import { getClientSession } from "~/sessions";
 import { Button } from "~/components/ui/button";
+import { Checkbox } from "~/components/ui/checkbox";
 
 
 export async function clientLoader({ params }: ClientLoaderFunctionArgs) {
@@ -77,6 +78,37 @@ export async function clientAction({ params, request }: ClientActionFunctionArgs
     }
   }
 
+  if (intent === "instance-settings-set") {
+    try {
+      const payload = {
+        rejectCall: formData.get("rejectCall") === "on",
+        msgCall: "",
+        groupsIgnore: formData.get("groupsIgnore") === "on",
+        alwaysOnline: formData.get("alwaysOnline") === "on",
+        readMessages: formData.get("readMessages") === "on",
+        readStatus: formData.get("readStatus") === "on",
+        syncFullHistory: false
+      };
+
+      const response = await fetch(`${apiUrl}/settings/set/${name}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: apiKey!,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.message || "Failed to update instance settings");
+      }
+      return { success: true };
+    } catch (e: any) {
+      return { error: e.message };
+    }
+  }
+
   return null;
 }
 
@@ -87,6 +119,7 @@ export default function InstanceShow() {
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [isChatwootModalOpen, setIsChatwootModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const isSubmitting = navigation.state === "submitting";
@@ -104,9 +137,10 @@ export default function InstanceShow() {
     conversationPending: false,
   };
 
-  // Close modal on success
-  if (actionData?.success && isChatwootModalOpen && !isSubmitting) {
-    setIsChatwootModalOpen(false);
+  // Close modals on success
+  if (actionData?.success && !isSubmitting) {
+    if (isChatwootModalOpen) setIsChatwootModalOpen(false);
+    if (isSettingsModalOpen) setIsSettingsModalOpen(false);
   }
 
   const fetchQr = async () => {
@@ -229,15 +263,20 @@ export default function InstanceShow() {
                 </div>
 
                 <div className="space-y-4">
-                  <h3 className="font-bold text-zinc-900 dark:text-zinc-100 flex items-center">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2" />
-                    Instance Settings
-                  </h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-bold text-zinc-900 dark:text-zinc-100 flex items-center">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2" />
+                      Instance Settings
+                    </h3>
+                    <Button variant="ghost" size="sm" className="h-7 text-[10px] font-bold" onClick={() => setIsSettingsModalOpen(true)}>
+                      Configure
+                    </Button>
+                  </div>
                   <div className="grid grid-cols-2 gap-3">
                     <SettingCard label="Always Online" active={instance.Setting?.alwaysOnline} />
+                    <SettingCard label="Ignore Groups" active={instance.Setting?.groupsIgnore} />
                     <SettingCard label="Reject Calls" active={instance.Setting?.rejectCall} />
                     <SettingCard label="Read Messages" active={instance.Setting?.readMessages} />
-                    <SettingCard label="Read Status" active={instance.Setting?.readStatus} />
                   </div>
                 </div>
 
@@ -370,19 +409,25 @@ export default function InstanceShow() {
             <Input label="Access Token" name="token" type="password" required defaultValue={chatwoot.token} />
             <Input label="Chatwoot URL" name="url" type="url" required defaultValue={chatwoot.url} placeholder="https://chatwoot.example.com" />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-zinc-50 dark:bg-zinc-950/50 p-4 rounded-xl border border-zinc-100 dark:border-zinc-800">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium">Sign Messages</span>
-                <input type="checkbox" name="signMsg" value="true" defaultChecked={chatwoot.signMsg} className="w-4 h-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-600" />
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium">Reopen Conv.</span>
-                <input type="checkbox" name="reopenConversation" value="true" defaultChecked={chatwoot.reopenConversation} className="w-4 h-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-600" />
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium">Pending Conv.</span>
-                <input type="checkbox" name="conversationPending" value="true" defaultChecked={chatwoot.conversationPending} className="w-4 h-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-600" />
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 bg-zinc-50 dark:bg-zinc-950/50 p-5 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+              <Checkbox
+                label="Sign Messages"
+                name="signMsg"
+                defaultChecked={chatwoot.signMsg}
+                description="Add signature to sent messages"
+              />
+              <Checkbox
+                label="Reopen Conv."
+                name="reopenConversation"
+                defaultChecked={chatwoot.reopenConversation}
+                description="Automatic conversation reopening"
+              />
+              <Checkbox
+                label="Pending Conv."
+                name="conversationPending"
+                defaultChecked={chatwoot.conversationPending}
+                description="Mark as pending by default"
+              />
             </div>
 
             <div className="flex items-center justify-between mt-6">
@@ -407,6 +452,71 @@ export default function InstanceShow() {
                   Save Configuration
                 </Button>
               </div>
+            </div>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isSettingsModalOpen} onOpenChange={setIsSettingsModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogTitle>Instance Settings</DialogTitle>
+          <DialogDescription>
+            Update your WhatsApp instance behavior and preferences.
+          </DialogDescription>
+
+          <Form method="post" className="space-y-6">
+            <input type="hidden" name="intent" value="instance-settings-set" />
+
+            {actionData?.error && (
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-3 rounded-lg text-xs text-red-600 dark:text-red-400">
+                {actionData.error}
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 gap-4 bg-zinc-50 dark:bg-zinc-950/50 p-5 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                <Checkbox
+                  label="Ignore Groups"
+                  name="groupsIgnore"
+                  defaultChecked={instance.Setting?.groupsIgnore}
+                  description="Do not process messages from groups"
+                />
+
+                <Checkbox
+                  label="Always Online"
+                  name="alwaysOnline"
+                  defaultChecked={instance.Setting?.alwaysOnline}
+                  description="Show as online even when inactive"
+                />
+
+                <Checkbox
+                  label="Reject Calls"
+                  name="rejectCall"
+                  defaultChecked={instance.Setting?.rejectCall}
+                  description="Automatically decline incoming calls"
+                />
+
+                <Checkbox
+                  label="Read Receipts"
+                  name="readMessages"
+                  defaultChecked={instance.Setting?.readMessages}
+                  description="Send blue ticks when reading messages"
+                />
+
+                <Checkbox
+                  label="Read Status"
+                  name="readStatus"
+                  defaultChecked={instance.Setting?.readStatus}
+                  description="Mark status as viewed"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <DialogClose render={<Button variant="secondary">Cancel</Button>} />
+              <Button type="submit" isLoading={isSubmitting}>
+                Save Settings
+              </Button>
             </div>
           </Form>
         </DialogContent>
