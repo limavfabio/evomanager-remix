@@ -17,15 +17,15 @@ export async function clientAction({ request }: ClientActionFunctionArgs) {
   const apiKey = formData.get("apiKey") as string;
 
   if (!apiUrl || !apiKey) {
-    return { error: "Please provide both API URL and API Key" };
+    return { error: "Por favor, forneça a URL da API e a Chave da API" };
   }
 
   try {
     new URL(apiUrl);
   } catch (e: any) {
     console.error("URL VALIDATION ERROR:", e);
-    alert("Invalid URL: " + e.message);
-    return { error: "Invalid API URL" };
+    alert("URL Inválida: " + e.message);
+    return { error: "URL da API inválida" };
   }
 
   setClientSession(apiUrl, apiKey);
@@ -45,14 +45,14 @@ export default function Login() {
             Evo Manager
           </h1>
           <p className="text-zinc-500 dark:text-zinc-400">
-            Connect to your Evolution API
+            Conecte-se à sua API Evolution
           </p>
         </div>
 
         <Form method="post" className="space-y-6">
           <div className="space-y-4">
             <Input
-              label="API URL"
+              label="URL da API"
               name="apiUrl"
               type="url"
               required
@@ -60,11 +60,11 @@ export default function Login() {
             />
 
             <Input
-              label="API Key"
+              label="Chave da API"
               name="apiKey"
               type="password"
               required
-              placeholder="Your Global API Key"
+              placeholder="Sua Chave da API Global"
               error={actionData?.error}
             />
           </div>
@@ -74,7 +74,7 @@ export default function Login() {
             isLoading={isSubmitting}
             className="w-full"
           >
-            Connect
+            Conectar
           </Button>
         </Form>
       </div>

@@ -18,7 +18,7 @@ import { Checkbox } from "~/components/ui/checkbox";
 
 export async function clientLoader({ params }: ClientLoaderFunctionArgs) {
   const { apiUrl, apiKey } = getClientSession();
-  if (!apiUrl || !apiKey) throw new Error("Unauthorized");
+  if (!apiUrl || !apiKey) throw new Error("Não autorizado");
   const name = params.name;
 
   // We fetch all and filter to get details, or use a specific endpoint if we had one.
@@ -28,7 +28,7 @@ export async function clientLoader({ params }: ClientLoaderFunctionArgs) {
   });
 
 
-  if (!response.ok) throw new Error("Failed to fetch instance details");
+  if (!response.ok) throw new Error("Falha ao buscar detalhes da instância");
 
   const data = await response.json();
   const instances = Array.isArray(data) ? data : (data.instances || []);
@@ -36,7 +36,7 @@ export async function clientLoader({ params }: ClientLoaderFunctionArgs) {
 
   console.log(instance)
 
-  if (!instance) throw new Error("Instance not found");
+  if (!instance) throw new Error("Instância não encontrada");
 
   return { instance, apiUrl, apiKey };
 }
@@ -71,7 +71,7 @@ export async function clientAction({ params, request }: ClientActionFunctionArgs
 
       if (!response.ok) {
         const err = await response.json();
-        throw new Error(err.message || "Failed to update Chatwoot settings");
+        throw new Error(err.message || "Falha ao atualizar configurações do Chatwoot");
       }
       return { success: true };
     } catch (e: any) {
@@ -106,7 +106,7 @@ export async function clientAction({ params, request }: ClientActionFunctionArgs
 
       if (!response.ok) {
         const err = await response.json();
-        throw new Error(err.message || "Failed to update instance settings");
+        throw new Error(err.message || "Falha ao atualizar configurações da instância");
       }
       return { success: true };
     } catch (e: any) {
@@ -176,13 +176,13 @@ export default function InstanceShow() {
       }
 
       if (!code) {
-        throw new Error("No QR code data received from API");
+        throw new Error("Nenhum código QR recebido da API");
       }
 
       setQrCode(code);
     } catch (e: any) {
       console.error("QR Fetch Error:", e);
-      alert(e.message || "Failed to fetch QR Code");
+      alert(e.message || "Falha ao buscar QR Code");
     } finally {
       setLoading(false);
     }
@@ -241,11 +241,11 @@ export default function InstanceShow() {
               )}
               <div>
                 <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">{name}</h2>
-                <p className="text-sm text-zinc-500">{instance.profileName || "WhatsApp Instance"}</p>
+                <p className="text-sm text-zinc-500">{instance.profileName || "Instância WhatsApp"}</p>
               </div>
             </div>
             <div className="text-right hidden sm:block">
-              <p className="text-xs text-zinc-400 uppercase font-bold tracking-widest mb-1">Integration</p>
+              <p className="text-xs text-zinc-400 uppercase font-bold tracking-widest mb-1">Integração</p>
               <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">{instance.integration || "Baileys"}</p>
             </div>
           </div>
@@ -256,14 +256,14 @@ export default function InstanceShow() {
                 <div className="space-y-4">
                   <h3 className="font-bold text-zinc-900 dark:text-zinc-100 flex items-center">
                     <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-2" />
-                    Connection Details
+                    Detalhes da Conexão
                   </h3>
                   <div className="space-y-3 bg-zinc-50/50 dark:bg-zinc-950/30 p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800/50">
                     <DetailRow label="ID" value={instance.id} />
-                    <DetailRow label="Instance Token" value={instance.token} isCode />
-                    <DetailRow label="WhatsApp JID" value={instance.ownerJid || "Not connected"} />
-                    <DetailRow label="Created At" value={new Date(instance.createdAt).toLocaleString()} />
-                    <DetailRow label="Last Activity" value={new Date(instance.updatedAt).toLocaleString()} />
+                    <DetailRow label="Token da Instância" value={instance.token} isCode />
+                    <DetailRow label="WhatsApp JID" value={instance.ownerJid || "Não conectado"} />
+                    <DetailRow label="Criado em" value={new Date(instance.createdAt).toLocaleString()} />
+                    <DetailRow label="Última Atividade" value={new Date(instance.updatedAt).toLocaleString()} />
                   </div>
                 </div>
 
@@ -271,24 +271,24 @@ export default function InstanceShow() {
                   <div className="flex items-center justify-between">
                     <h3 className="font-bold text-zinc-900 dark:text-zinc-100 flex items-center">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2" />
-                      Instance Settings
+                      Configurações da Instância
                     </h3>
                     <Button variant="ghost" size="sm" className="h-7 text-[10px] font-bold" onClick={() => setIsSettingsModalOpen(true)}>
-                      Configure
+                      Configurar
                     </Button>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <SettingCard label="Always Online" active={instance.Setting?.alwaysOnline} />
-                    <SettingCard label="Ignore Groups" active={instance.Setting?.groupsIgnore} />
-                    <SettingCard label="Reject Calls" active={instance.Setting?.rejectCall} />
-                    <SettingCard label="Read Messages" active={instance.Setting?.readMessages} />
+                    <SettingCard label="Sempre Online" active={instance.Setting?.alwaysOnline} />
+                    <SettingCard label="Ignorar Grupos" active={instance.Setting?.groupsIgnore} />
+                    <SettingCard label="Rejeitar Chamadas" active={instance.Setting?.rejectCall} />
+                    <SettingCard label="Ler Mensagens" active={instance.Setting?.readMessages} />
                   </div>
                 </div>
 
                 <div className="space-y-4">
                   <h3 className="font-bold text-zinc-900 dark:text-zinc-100 flex items-center">
                     <span className="w-1.5 h-1.5 rounded-full bg-orange-500 mr-2" />
-                    Active Integrations
+                    Integrações Ativas
                   </h3>
                   <div className="space-y-3">
                     <div className="p-4 bg-zinc-50/50 dark:bg-zinc-950/30 rounded-2xl border border-zinc-100 dark:border-zinc-800/50">
@@ -300,18 +300,18 @@ export default function InstanceShow() {
                           <div>
                             <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">Chatwoot</p>
                             <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-tight">
-                              {instance.Chatwoot?.enabled ? 'Connected' : 'Not Configured'}
+                              {instance.Chatwoot?.enabled ? 'Conectado' : 'Não Configurado'}
                             </p>
                           </div>
                         </div>
                         <Button variant="ghost" size="sm" className="text-xs font-bold h-7" onClick={() => setIsChatwootModalOpen(true)}>
-                          Configure
+                          Configurar
                         </Button>
                       </div>
 
                       {instance.Chatwoot?.enabled && (
                         <div className="mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-800/50 space-y-2">
-                          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Webhook URL</p>
+                          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">URL do Webhook</p>
                           <div className="flex items-center gap-2">
                             <input
                               readOnly
@@ -328,9 +328,9 @@ export default function InstanceShow() {
                                 setTimeout(() => setCopied(false), 2000);
                               }}
                             >
-                              <span className={`transition-transform duration-300 ${copied ? '-translate-y-8' : 'translate-y-0'}`}>Copy</span>
+                              <span className={`transition-transform duration-300 ${copied ? '-translate-y-8' : 'translate-y-0'}`}>Copiar</span>
                               <span className={`absolute inset-0 flex items-center justify-center bg-zinc-900 text-white transition-transform duration-300 ${copied ? 'translate-y-0' : 'translate-y-8'}`}>
-                                Copied!
+                                Copiado!
                               </span>
                             </Button>
                           </div>
@@ -348,26 +348,26 @@ export default function InstanceShow() {
                       <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
                         ✓
                       </div>
-                      <p className="font-bold text-zinc-900 dark:text-zinc-100 text-lg">Connected & Active</p>
-                      <p className="text-sm text-zinc-500 max-w-[200px] mx-auto">This instance is authenticated and processing events.</p>
+                      <p className="font-bold text-zinc-900 dark:text-zinc-100 text-lg">Conectado e Ativo</p>
+                      <p className="text-sm text-zinc-500 max-w-[200px] mx-auto">Esta instância está autenticada e processando eventos.</p>
                     </div>
                   ) : qrCode ? (
                     <div className="space-y-4 text-center">
                       <div className="bg-white p-4 rounded-2xl shadow-2xl border border-zinc-200">
                         <img src={qrCode} alt="WhatsApp QR Code" className="w-48 h-48 mx-auto" />
                       </div>
-                      <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">Scan with WhatsApp Linked Devices</p>
-                      <Button variant="secondary" size="sm" onClick={() => setQrCode(null)}>Cancel</Button>
+                      <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">Escaneie com Dispositivos Conectados do WhatsApp</p>
+                      <Button variant="secondary" size="sm" onClick={() => setQrCode(null)}>Cancelar</Button>
                     </div>
                   ) : (
                     <div className="text-center space-y-4 py-8">
-                      <p className="text-sm text-zinc-500">Authentication required.</p>
+                      <p className="text-sm text-zinc-500">Autenticação necessária.</p>
                       <Button
                         onClick={fetchQr}
                         isLoading={loading}
                         className="w-full"
                       >
-                        Generate QR Code
+                        Gerar QR Code
                       </Button>
                     </div>
                   )}
@@ -376,12 +376,12 @@ export default function InstanceShow() {
                 <div className="space-y-4">
                   <h3 className="font-bold text-zinc-900 dark:text-zinc-100 flex items-center">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-2" />
-                    Statistics
+                    Estatísticas
                   </h3>
                   <div className="grid grid-cols-3 gap-4">
-                    <StatBox label="Messages" value={instance._count?.Message || 0} />
+                    <StatBox label="Mensagens" value={instance._count?.Message || 0} />
                     <StatBox label="Chats" value={instance._count?.Chat || 0} />
-                    <StatBox label="Contacts" value={instance._count?.Contact || 0} />
+                    <StatBox label="Contatos" value={instance._count?.Contact || 0} />
                   </div>
                 </div>
               </div>
@@ -392,9 +392,9 @@ export default function InstanceShow() {
 
       <Dialog open={isChatwootModalOpen} onOpenChange={setIsChatwootModalOpen}>
         <DialogContent className="max-w-xl">
-          <DialogTitle>Chatwoot Integration</DialogTitle>
+          <DialogTitle>Integração Chatwoot</DialogTitle>
           <DialogDescription>
-            Bind this WhatsApp instance to your Chatwoot API inbox.
+            Vincule esta instância do WhatsApp à sua caixa de entrada da API Chatwoot.
           </DialogDescription>
 
           <Form method="post" className="space-y-4" id="chatwoot-form">
@@ -408,30 +408,30 @@ export default function InstanceShow() {
             )}
 
             <div className="grid grid-cols-2 gap-4">
-              <Input label="Account ID" name="accountId" type="number" required defaultValue={chatwoot.accountId} />
-              <Input label="Inbox ID / Name" name="inboxId" required defaultValue={chatwoot.inboxId || chatwoot.nameInbox} />
+              <Input label="ID da Conta" name="accountId" type="number" required defaultValue={chatwoot.accountId} />
+              <Input label="ID da Caixa de Entrada / Nome" name="inboxId" required defaultValue={chatwoot.inboxId || chatwoot.nameInbox} />
             </div>
-            <Input label="Access Token" name="token" type="password" required defaultValue={chatwoot.token} />
-            <Input label="Chatwoot URL" name="url" type="url" required defaultValue={chatwoot.url} placeholder="https://chatwoot.example.com" />
+            <Input label="Token de Acesso" name="token" type="password" required defaultValue={chatwoot.token} />
+            <Input label="URL do Chatwoot" name="url" type="url" required defaultValue={chatwoot.url} placeholder="https://chatwoot.example.com" />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 bg-zinc-50 dark:bg-zinc-950/50 p-5 rounded-2xl border border-zinc-100 dark:border-zinc-800">
               <Checkbox
-                label="Sign Messages"
+                label="Assinar Mensagens"
                 name="signMsg"
                 defaultChecked={chatwoot.signMsg}
-                description="Add signature to sent messages"
+                description="Adicionar assinatura às mensagens enviadas"
               />
               <Checkbox
-                label="Reopen Conv."
+                label="Reabrir Conv."
                 name="reopenConversation"
                 defaultChecked={chatwoot.reopenConversation}
-                description="Automatic conversation reopening"
+                description="Reabertura automática de conversas"
               />
               <Checkbox
-                label="Pending Conv."
+                label="Conv. Pendente"
                 name="conversationPending"
                 defaultChecked={chatwoot.conversationPending}
-                description="Mark as pending by default"
+                description="Marcar como pendente por padrão"
               />
             </div>
 
@@ -447,14 +447,14 @@ export default function InstanceShow() {
                       if (input) input.value = "false";
                     }}
                   >
-                    Disconnect Integration
+                    Desconectar Integração
                   </Button>
                 )}
               </div>
               <div className="flex space-x-3">
-                <DialogClose render={<Button variant="secondary">Cancel</Button>} />
+                <DialogClose render={<Button variant="secondary">Cancelar</Button>} />
                 <Button type="submit" isLoading={isSubmitting}>
-                  Save Configuration
+                  Salvar Configuração
                 </Button>
               </div>
             </div>
@@ -464,9 +464,9 @@ export default function InstanceShow() {
 
       <Dialog open={isSettingsModalOpen} onOpenChange={setIsSettingsModalOpen}>
         <DialogContent className="max-w-md">
-          <DialogTitle>Instance Settings</DialogTitle>
+          <DialogTitle>Configurações da Instância</DialogTitle>
           <DialogDescription>
-            Update your WhatsApp instance behavior and preferences.
+            Atualize o comportamento e as preferências da sua instância do WhatsApp.
           </DialogDescription>
 
           <Form method="post" className="space-y-6">
@@ -481,56 +481,56 @@ export default function InstanceShow() {
             <div className="space-y-4">
               <div className="grid grid-cols-1 gap-4 bg-zinc-50 dark:bg-zinc-950/50 p-5 rounded-2xl border border-zinc-100 dark:border-zinc-800">
                 <Checkbox
-                  label="Ignore Groups"
+                  label="Ignorar Grupos"
                   name="groupsIgnore"
                   defaultChecked={instance.Setting?.groupsIgnore}
-                  description="Do not process messages from groups"
+                  description="Não processar mensagens de grupos"
                 />
 
                 <Checkbox
-                  label="Always Online"
+                  label="Sempre Online"
                   name="alwaysOnline"
                   defaultChecked={instance.Setting?.alwaysOnline}
-                  description="Show as online even when inactive"
+                  description="Mostrar como online mesmo quando inativo"
                 />
 
                 <Checkbox
-                  label="Reject Calls"
+                  label="Rejeitar Chamadas"
                   name="rejectCall"
                   defaultChecked={instance.Setting?.rejectCall}
-                  description="Automatically decline incoming calls"
+                  description="Recusar automaticamente chamadas recebidas"
                 />
 
                 <Checkbox
-                  label="Read Receipts"
+                  label="Recibos de Leitura"
                   name="readMessages"
                   defaultChecked={instance.Setting?.readMessages}
-                  description="Send blue ticks when reading messages"
+                  description="Enviar confirmação de leitura ao ler mensagens"
                 />
 
                 <Checkbox
-                  label="Read Status"
+                  label="Ler Status"
                   name="readStatus"
                   defaultChecked={instance.Setting?.readStatus}
-                  description="Mark status as viewed"
+                  description="Marcar status como visualizado"
                 />
               </div>
 
               <Textarea
-                label="Ignore JIDs"
+                label="Ignorar JIDs"
                 name="ignoreJids"
                 placeholder="123456789@s.whatsapp.net, 987654321@g.us"
                 defaultValue={Array.isArray(instance.Setting?.ignoreJids) ? instance.Setting.ignoreJids.join(", ") : ""}
               />
               <p className="text-[10px] text-zinc-500 -mt-2">
-                Separate JIDs with commas. These contacts/groups will be ignored by the API.
+                Separe os JIDs com vírgulas. Estes contatos/grupos serão ignorados pela API.
               </p>
             </div>
 
             <div className="flex justify-end space-x-3">
-              <DialogClose render={<Button variant="secondary">Cancel</Button>} />
+              <DialogClose render={<Button variant="secondary">Cancelar</Button>} />
               <Button type="submit" isLoading={isSubmitting}>
-                Save Settings
+                Salvar Configurações
               </Button>
             </div>
           </Form>

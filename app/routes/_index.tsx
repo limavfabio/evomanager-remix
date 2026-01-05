@@ -31,7 +31,7 @@ import {
 export function meta() {
   return [
     { title: "Dashboard | Evo Manager" },
-    { name: "description", content: "Manage your Evolution API instances" },
+    { name: "description", content: "Gerencie suas instâncias da Evolution API" },
   ];
 }
 
@@ -51,10 +51,10 @@ export async function clientLoader() {
 
     if (!response.ok) {
       if (response.status === 401) {
-        throw new Error("Invalid API Key");
+        throw new Error("Chave da API Inválida");
       }
       const errText = await response.text();
-      throw new Error(`Failed to fetch instances: ${response.status} ${errText}`);
+      throw new Error(`Falha ao buscar instâncias: ${response.status} ${errText}`);
     }
 
     const data = await response.json();
@@ -67,7 +67,7 @@ export async function clientLoader() {
     console.error("FULL ERROR:", error);
     return {
       instances: [],
-      error: error?.message || "Failed to connect to Evolution API",
+      error: error?.message || "Falha ao conectar à API Evolution",
       apiUrl,
       apiKey: null,
     };
@@ -86,7 +86,7 @@ export async function clientAction({ request }: ClientActionFunctionArgs) {
 
   if (intent === "create-instance") {
     const instanceName = formData.get("instanceName") as string;
-    if (!instanceName) return { error: "Instance name is required" };
+    if (!instanceName) return { error: "Nome da instância é obrigatório" };
 
     try {
       const response = await fetch(`${apiUrl}/instance/create`, {
@@ -114,7 +114,7 @@ export async function clientAction({ request }: ClientActionFunctionArgs) {
 
       if (!response.ok) {
         const err = await response.json();
-        throw new Error(err.message || "Failed to create instance");
+        throw new Error(err.message || "Falha ao criar instância");
       }
 
       return redirect(`/instances/${instanceName}?new=true`);
@@ -126,7 +126,7 @@ export async function clientAction({ request }: ClientActionFunctionArgs) {
 
   if (intent === "delete-instance") {
     const instanceName = formData.get("instanceName") as string;
-    if (!instanceName) return { error: "Instance name is required" };
+    if (!instanceName) return { error: "Nome da instância é obrigatório" };
 
     try {
       const response = await fetch(`${apiUrl}/instance/delete/${instanceName}`, {
@@ -138,7 +138,7 @@ export async function clientAction({ request }: ClientActionFunctionArgs) {
 
       if (!response.ok) {
         const err = await response.json();
-        throw new Error(err.message || "Failed to delete instance");
+        throw new Error(err.message || "Falha ao excluir instância");
       }
 
       return { success: true };
@@ -196,7 +196,7 @@ export default function Dashboard() {
 
           <div className="flex items-center space-x-4">
             <div className="hidden md:flex flex-col items-end">
-              <span className="text-xs text-zinc-500 dark:text-zinc-400">Connected to</span>
+              <span className="text-xs text-zinc-500 dark:text-zinc-400">Conectado a</span>
               <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300 truncate max-w-[200px]">
                 {apiUrl}
               </span>
@@ -204,7 +204,7 @@ export default function Dashboard() {
             <Form method="post">
               <input type="hidden" name="intent" value="logout" />
               <Button variant="ghost" size="sm" type="submit" className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300">
-                Logout
+                Sair
               </Button>
             </Form>
           </div>
@@ -214,16 +214,16 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Instances</h2>
-            <p className="text-zinc-500 dark:text-zinc-400">Manage your Evolution API instances</p>
+            <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Instâncias</h2>
+            <p className="text-zinc-500 dark:text-zinc-400">Gerencie suas instâncias da Evolution API</p>
           </div>
 
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-            <DialogTrigger render={<Button size="md">+ New Instance</Button>} />
+            <DialogTrigger render={<Button size="md">+ Nova Instância</Button>} />
             <DialogContent>
-              <DialogTitle>Create Instance</DialogTitle>
+              <DialogTitle>Criar Instância</DialogTitle>
               <DialogDescription>
-                Provide a unique name for your new WhatsApp instance.
+                Forneça um nome único para sua nova instância do WhatsApp.
               </DialogDescription>
 
               <Form method="post" className="space-y-4">
@@ -236,59 +236,59 @@ export default function Dashboard() {
                 )}
 
                 <Input
-                  label="Instance Name"
+                  label="Nome da Instância"
                   name="instanceName"
                   required
-                  placeholder="My_Business_WA"
+                  placeholder="Meu_Negocio_WA"
                   disabled={isCreating}
                 />
 
                 <div className="space-y-4">
-                  <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Instance Settings</p>
+                  <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Configurações da Instância</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 bg-zinc-50 dark:bg-zinc-950/50 p-5 rounded-2xl border border-zinc-100 dark:border-zinc-800">
                     <Checkbox
-                      label="Ignore Groups"
+                      label="Ignorar Grupos"
                       name="groupsIgnore"
                       defaultChecked
-                      description="No API events for groups"
+                      description="Sem eventos de API para grupos"
                     />
                     <Checkbox
-                      label="Reject Calls"
+                      label="Rejeitar Chamadas"
                       name="rejectCall"
-                      description="Auto-decline incoming calls"
+                      description="Recusar chamadas recebidas"
                     />
                     <Checkbox
-                      label="Always Online"
+                      label="Sempre Online"
                       name="alwaysOnline"
                       defaultChecked
-                      description="Keep status active"
+                      description="Manter status ativo"
                     />
                     <Checkbox
-                      label="Read Messages"
+                      label="Ler Mensagens"
                       name="readMessages"
                       defaultChecked
-                      description="Send blue ticks"
+                      description="Enviar confirmação de leitura"
                     />
                     <Checkbox
-                      label="Read Status"
+                      label="Ler Status"
                       name="readStatus"
                       defaultChecked
-                      description="View status updates"
+                      description="Ver atualizações de status"
                     />
                   </div>
                   <Textarea
-                    label="Ignore JIDs"
+                    label="Ignorar JIDs"
                     name="ignoreJids"
                     placeholder="123456789@s.whatsapp.net, 987654321@g.us"
                   />
                   <p className="text-[10px] text-zinc-500 -mt-2">
-                    Separate JIDs with commas.
+                    Separe os JIDs com vírgulas.
                   </p>
                 </div>
                 <div className="flex justify-end space-x-3 mt-6">
-                  <DialogClose render={<Button variant="secondary" disabled={isCreating}>Cancel</Button>} />
+                  <DialogClose render={<Button variant="secondary" disabled={isCreating}>Cancelar</Button>} />
                   <Button type="submit" isLoading={isCreating}>
-                    {isCreating ? "Creating..." : "Create"}
+                    {isCreating ? "Criando..." : "Criar"}
                   </Button>
                 </div>
               </Form>
@@ -306,14 +306,14 @@ export default function Dashboard() {
 
         {instances.length === 0 && !error ? (
           <div className="text-center py-20 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 border-dashed">
-            <p className="text-zinc-500 dark:text-zinc-400">No instances found.</p>
+            <p className="text-zinc-500 dark:text-zinc-400">Nenhuma instância encontrada.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {instances.map((item: any, index: number) => {
               const name = item?.name || item?.instanceName || `Instance ${index}`;
               const status = item?.connectionStatus || item?.status || "unknown";
-              const profile = item?.profileName || item?.ownerJid || "No Profile";
+              const profile = item?.profileName || item?.ownerJid || "Sem Perfil";
               const pic = item?.profilePicUrl;
 
               return (
@@ -359,17 +359,17 @@ export default function Dashboard() {
                           className="group-hover:translate-x-1 transition-transform p-0 h-auto font-semibold"
                           render={<Link to={`/instances/${name}`} />}
                         >
-                          Manage <span className="ml-1">→</span>
+                          Gerenciar <span className="ml-1">→</span>
                         </Button>
                       </div>
                     </div>
                   </ContextMenuTrigger>
                   <ContextMenuContent>
-                    <ContextMenuItem render={<Link to={`/instances/${name}`} />}>View Details</ContextMenuItem>
-                    <ContextMenuItem>Restart Instance</ContextMenuItem>
+                    <ContextMenuItem render={<Link to={`/instances/${name}`} />}>Ver Detalhes</ContextMenuItem>
+                    <ContextMenuItem>Reiniciar Instância</ContextMenuItem>
                     <div className="my-1 h-px bg-zinc-100 dark:bg-zinc-800" />
                     <ContextMenuItem destructive onClick={() => handleDeleteRequest(name, status)}>
-                      Delete Instance
+                      Excluir Instância
                     </ContextMenuItem>
                   </ContextMenuContent>
                 </ContextMenu>
@@ -382,14 +382,14 @@ export default function Dashboard() {
       {/* Custom Delete Confirmation Dialog */}
       <AlertDialog open={deleteConfirm.open} onOpenChange={(open) => !open && setDeleteConfirm({ open: false, name: "" })}>
         <AlertDialogContent>
-          <AlertDialogTitle>Delete Instance</AlertDialogTitle>
+          <AlertDialogTitle>Excluir Instância</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete the instance <span className="font-bold text-zinc-900 dark:text-zinc-100">"{deleteConfirm.name}"</span>? This action cannot be undone.
+            Tem certeza de que deseja excluir a instância <span className="font-bold text-zinc-900 dark:text-zinc-100">"{deleteConfirm.name}"</span>? Esta ação não pode ser desfeita.
           </AlertDialogDescription>
           <div className="flex justify-end space-x-3">
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction variant="destructive" onClick={() => performDelete(deleteConfirm.name)}>
-              Delete
+              Excluir
             </AlertDialogAction>
           </div>
         </AlertDialogContent>
