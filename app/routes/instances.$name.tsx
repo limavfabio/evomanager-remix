@@ -43,6 +43,7 @@ export async function clientLoader({ params }: ClientLoaderFunctionArgs) {
 
 export async function clientAction({ params, request }: ClientActionFunctionArgs) {
   const { apiUrl, apiKey } = getClientSession();
+  const cleanUrl = apiUrl?.endsWith("/") ? apiUrl.slice(0, -1) : apiUrl;
   const name = params.name;
   const formData = await request.formData();
   const intent = formData.get("intent");
@@ -55,12 +56,12 @@ export async function clientAction({ params, request }: ClientActionFunctionArgs
         inboxId: String(formData.get("inboxId")),
         token: formData.get("token") as string,
         url: formData.get("url") as string,
-        signMsg: formData.get("signMsg") === "true",
-        reopenConversation: formData.get("reopenConversation") === "true",
-        conversationPending: formData.get("conversationPending") === "true",
+        signMsg: formData.get("signMsg") === "on",
+        reopenConversation: formData.get("reopenConversation") === "on",
+        conversationPending: formData.get("conversationPending") === "on",
       };
 
-      const response = await fetch(`${apiUrl}/chatwoot/set/${name}`, {
+      const response = await fetch(`${cleanUrl}/chatwoot/set/${name}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -95,7 +96,7 @@ export async function clientAction({ params, request }: ClientActionFunctionArgs
         syncFullHistory: false
       };
 
-      const response = await fetch(`${apiUrl}/settings/set/${name}`, {
+      const response = await fetch(`${cleanUrl}/settings/set/${name}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
